@@ -1,3 +1,5 @@
+use std::cmp::max;
+
 use log::error;
 use tui::{
     backend::Backend,
@@ -92,6 +94,36 @@ where
         .graph_type(GraphType::Line)
         .data(&points.data)];
 
+    eprintln!("Data: {:?}", points.data);
+    let mut five_percent_span = (points.y_max - points.y_min) * 0.05;
+    if five_percent_span == 0.0 {
+        five_percent_span = 1.0;
+    }
+    let y_min_axis = points.y_min - five_percent_span;
+    let y_max_axis = points.y_max + five_percent_span;
+    let y_labels = if y_max_axis < 0.0001 && y_min_axis < 0.0001 {
+        vec![
+            Span::raw(format!("{0:.1$e}", y_min_axis, 4)),
+            Span::raw(format!("{0:.1$e}", y_max_axis, 4)),
+        ]
+    } else {
+        //Use 3 digits precision unless for close to integer values
+        let y_min_prec = if (y_min_axis - y_min_axis.floor()) < 0.0001 {
+            0
+        } else {
+            3
+        };
+        let y_max_prec = if (y_max_axis - y_max_axis.floor()) < 0.0001 {
+            0
+        } else {
+            3
+        };
+        vec![
+            Span::raw(format!("{:.1$}", y_min_axis, y_min_prec)),
+            Span::raw(format!("{:.1$}", y_max_axis, y_max_prec)),
+        ]
+    };
+
     let chart = Chart::new(datasets)
         .block(Block::default().title("Graph").borders(Borders::ALL))
         .x_axis(
@@ -104,11 +136,11 @@ where
         )
         .y_axis(
             Axis::default()
-                .labels(vec![
-                    Span::raw(format!("{:+.4e}", points.y_min)),
-                    Span::raw(format!("{:+.4e}", points.y_max)),
-                ])
-                .bounds([points.y_min, points.y_max]),
+                .labels(y_labels)
+                .bounds([
+                    points.y_min - five_percent_span,
+                    points.y_max + five_percent_span,
+                ]),
         );
     f.render_widget(chart, area);
 }

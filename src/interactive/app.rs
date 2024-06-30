@@ -66,8 +66,18 @@ impl<'a> App<'a> {
 
         // reset labels state
         if different {
-            self.labels_list_state.select(Some(0));
-            self.selected_label = None
+            let selected_metric = self.selected_metric.clone().expect("metric to be selected");
+            if let Some(metric) = self
+                .metric_scraper
+                .get_history_lock()?
+                .get_metric(&selected_metric)
+            {
+                self.selected_label = metric.time_series.keys().next().cloned();
+                self.labels_list_state.select(Some(0));
+            } else {
+                self.labels_list_state.select(Some(0));
+                self.selected_label = None
+            }
         }
         return Ok(different);
     }
