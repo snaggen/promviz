@@ -103,5 +103,5 @@ pub fn generate_metric_lines() -> Vec<String> {
         "response_time_no_labels_sum 32899.06535799631",
     ));
     lines.push(String::from("response_time_count 6451"));
-    return lines;
+    lines
 }

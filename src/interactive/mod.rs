@@ -26,7 +26,7 @@ enum Event<I> {
 }
 
 pub async fn show(endpoint: String, scrape_interval: u64) -> Result<(), Box<dyn Error>> {
-    let metric_scraper = MetricScraper::new(endpoint.clone(), scrape_interval.clone());
+    let metric_scraper = MetricScraper::new(endpoint.clone(), scrape_interval);
     let mut app = App::new(&endpoint, scrape_interval, metric_scraper);
     log::info!("app: {app:#?}");
     // setup terminal

@@ -20,7 +20,7 @@ impl MetricHistory {
     }
 
     pub fn get_metrics_headers(&self) -> Vec<String> {
-        self.metrics.iter().map(|(k, _)| k.clone()).collect()
+        self.metrics.keys().cloned().collect()
     }
 
     pub fn get_metric(&self, metric_name: &str) -> Option<&Metric> {
@@ -138,7 +138,7 @@ fn add_time_series_into_metric(
 ) {
     let mut labels_map = HashMap::new();
     let key;
-    if labels.contains("=") {
+    if labels.contains('=') {
         (labels_map, key) = extract_labels_key_and_map(Some(labels));
     } else {
         key = labels;

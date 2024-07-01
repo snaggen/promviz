@@ -18,16 +18,15 @@ pub fn app_config(file_name: &str, level: Option<&str>) -> Config {
         .encoder(Box::new(PatternEncoder::new("{d} - {l} - {m}{n}")))
         .build(file_name)
         .unwrap();
-    let config = Config::builder()
+
+    Config::builder()
         .appender(Appender::builder().build("file", Box::new(log_file)))
         .build(
             Root::builder()
                 .appender("file")
                 .build(level.unwrap_or(LevelFilter::Info)),
         )
-        .unwrap();
-
-    config
+        .unwrap()
 }
 
 fn convert_to_level(level: &str) -> Result<LevelFilter, &str> {

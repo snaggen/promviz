@@ -58,7 +58,7 @@ async fn scrape_metric_endpoint(
     loop {
         // scrape and update history
         if must_scrape {
-            let splitted_metrics_result = get_splitted_metrics_from_endpoint(&url).await;
+            let splitted_metrics_result = get_splitted_metrics_from_endpoint(url).await;
 
             match splitted_metrics_result {
                 Ok(splitted_metrics) => {
@@ -124,21 +124,17 @@ fn update_error_status(error_msg: &Arc<RwLock<Option<String>>>, error_message: O
 }
 
 fn get_timestamp_unix_epoch() -> u64 {
-    let timestamp = SystemTime::now()
+    SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap()
-        .as_secs();
-    timestamp
+        .as_secs()
 }
 
 // TODO handle error when scraping endpoint is down and make app surviving connection issues.
 async fn get_splitted_metrics_from_endpoint(url: &str) -> anyhow::Result<Vec<Vec<String>>> {
     let resp = reqwest::get(url).await?.text().await?;
-    let lines = resp
-        .split("\n")
-        .map(|s| String::from(s))
-        .collect::<Vec<String>>();
-    return Ok(split_metric_lines(lines));
+    let lines = resp.split('\n').map(String::from).collect::<Vec<String>>();
+    Ok(split_metric_lines(lines))
 }
 
 #[cfg(test)]

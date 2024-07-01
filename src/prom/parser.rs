@@ -10,44 +10,38 @@ pub fn decode_single_scrape_metric(lines: Vec<String>, timestamp: u64) -> Single
     let (name, docstring) = extract_name_docstring(&lines[0]).unwrap();
     let metric_type = extract_type(&lines[1]).unwrap();
     let mut single_scrape_metric = SingleScrapeMetric {
-        name: name,
-        docstring: docstring,
+        name,
+        docstring,
         metric_type: MetricType::Gauge,
         value_per_labels: HashMap::new(),
     };
     match metric_type.as_str() {
         "gauge" => {
             for line in lines.iter().skip(2) {
-                if line == "" {
+                if line.is_empty() {
                     continue;
                 }
-                let labels = extract_labels(&line);
+                let labels = extract_labels(line);
                 let (_, key) = extract_labels_key_and_map(labels);
-                let value = extract_value(&line);
+                let value = extract_value(line);
                 single_scrape_metric.value_per_labels.insert(
                     key,
-                    Sample::GaugeSample(SingleValueSample {
-                        timestamp: timestamp,
-                        value: value,
-                    }),
+                    Sample::GaugeSample(SingleValueSample { timestamp, value }),
                 );
             }
         }
         "counter" => {
             for line in lines.iter().skip(2) {
-                if line == "" {
+                if line.is_empty() {
                     continue;
                 }
-                let labels = extract_labels(&line);
+                let labels = extract_labels(line);
                 let (_, key) = extract_labels_key_and_map(labels);
-                let value = extract_value(&line);
+                let value = extract_value(line);
                 single_scrape_metric.metric_type = MetricType::Counter;
                 single_scrape_metric.value_per_labels.insert(
                     key,
-                    Sample::CounterSample(SingleValueSample {
-                        timestamp: timestamp,
-                        value: value,
-                    }),
+                    Sample::CounterSample(SingleValueSample { timestamp, value }),
                 );
             }
         }
@@ -58,10 +52,10 @@ pub fn decode_single_scrape_metric(lines: Vec<String>, timestamp: u64) -> Single
                 let mut bucket_values = Vec::new();
                 // retrieve buckets values
                 for line in group_lines.iter().take(group_lines.len() - 2) {
-                    let labels = extract_labels(&line);
+                    let labels = extract_labels(line);
                     let (labels_map, _) = extract_labels_key_and_map(labels);
                     let bucket_value = labels_map.get("le").unwrap();
-                    let value = extract_value(&line);
+                    let value = extract_value(line);
                     bucket_values.push(Bucket::new(bucket_value.clone(), value as u64));
                 }
                 // retrieve sum value
@@ -89,10 +83,10 @@ pub fn decode_single_scrape_metric(lines: Vec<String>, timestamp: u64) -> Single
                 let mut bucket_values = Vec::new();
                 // retrieve buckets values
                 for line in group_lines.iter().take(group_lines.len() - 2) {
-                    let labels = extract_labels(&line);
+                    let labels = extract_labels(line);
                     let (labels_map, _) = extract_labels_key_and_map(labels);
                     let bucket_value = labels_map.get("quantile").unwrap();
-                    let value = extract_value(&line);
+                    let value = extract_value(line);
                     bucket_values.push(Bucket::new(bucket_value.clone(), value as u64));
                 }
                 // retrieve sum value
@@ -136,7 +130,7 @@ pub fn split_metric_lines(lines: Vec<String>) -> Vec<Vec<String>> {
     let mut metric_lines: Vec<String> = Vec::new();
 
     for (index, line) in lines.iter().enumerate() {
-        if metric_lines.len() != 0
+        if !metric_lines.is_empty()
             && (index + 1 == lines.len() || lines[index + 1].starts_with("# HELP"))
         {
             metric_lines.push(line.to_string());
@@ -147,7 +141,7 @@ pub fn split_metric_lines(lines: Vec<String>) -> Vec<Vec<String>> {
         metric_lines.push(line.to_string());
     }
 
-    return metrics;
+    metrics
 }
 
 pub fn further_split_metric_lines_for_histogram(lines: &[String]) -> Vec<Vec<String>> {
@@ -163,38 +157,38 @@ pub fn further_split_metric_lines_for_histogram(lines: &[String]) -> Vec<Vec<Str
         }
         metric_lines.push(line.to_string());
     }
-    return metrics;
+    metrics
 }
 
 fn extract_name_docstring(line: &str) -> Option<(String, String)> {
     let name_desc: String = line.chars().skip(7).take(line.len() - 6).collect();
     let name_desc = name_desc
-        .match_indices(" ")
-        .nth(0)
+        .match_indices(' ')
+        .next()
         .map(|(index, _)| name_desc.split_at(index))
         .map(|(name, desc)| (String::from(name), String::from(desc.trim())));
-    return name_desc;
+    name_desc
 }
 
 fn extract_type(line: &str) -> Option<String> {
     let metric_type = line
-        .match_indices(" ")
+        .match_indices(' ')
         .nth(2)
         .map(|(index, _)| line.split_at(index))
         .map(|(_, metric_type)| String::from(metric_type.trim()));
-    return metric_type;
+    metric_type
 }
 
 pub fn extract_labels(line: &String) -> Option<String> {
-    match line.find("{") {
-        Some(firs_index) => match line.find("}") {
+    match line.find('{') {
+        Some(firs_index) => match line.find('}') {
             Some(second_index) => {
                 let labels = line
                     .split_at(firs_index + 1)
                     .1
                     .split_at(second_index - firs_index - 1)
                     .0;
-                return Some(String::from(labels));
+                Some(String::from(labels))
             }
             None => None,
         },
@@ -213,13 +207,13 @@ pub fn extract_labels_with_rgx(line: &str) -> Option<String> {
 
 pub fn decode_labels(labels: &str) -> HashMap<String, String> {
     let parts: Vec<String> = labels
-        .split(",")
+        .split(',')
         .map(|s| s.to_string())
-        .filter(|s| s.len() > 0)
+        .filter(|s| !s.is_empty())
         .collect();
     let mut labels = HashMap::new();
     for label in parts {
-        let split: Vec<&str> = label.split("=").collect();
+        let split: Vec<&str> = label.split('=').collect();
         if split.len() != 2 {
             error!("failed to split this value: {:?}", split);
             continue;
@@ -228,9 +222,9 @@ pub fn decode_labels(labels: &str) -> HashMap<String, String> {
         let key_value: Vec<String> = split
             .iter()
             .map(|s| s.to_string())
-            .filter(|s| s.len() > 0)
+            .filter(|s| !s.is_empty())
             .collect();
-        let value = key_value[1].clone().replace("\"", "");
+        let value = key_value[1].clone().replace('"', "");
         labels.insert(key_value[0].clone(), value);
     }
     labels
