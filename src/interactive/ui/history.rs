@@ -209,7 +209,7 @@ fn draw_histogram(f: &mut Frame, area: Rect, histogram_data: &HistogramData) {
 
 fn format_value(value: f64) -> String {
     // Use e notation for really small values
-    if value < 0.0001 {
+    if value != 0.0 && value < 0.0001 {
         format!("{0:.1$e}", value, 4)
     } else {
         let prec = if (value - value.floor()) < 0.0001 {
