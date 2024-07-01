@@ -1,18 +1,21 @@
 use std::error::Error;
 
 use crate::prom::MetricScraper;
-use tui::widgets::ListState;
+use ratatui::widgets::ListState;
 
+#[derive(Debug)]
 pub enum ElementInFocus {
     MetricHeaders,
     LabelsView,
 }
 
+#[derive(Debug)]
 enum Direction {
     Up,
     Down,
 }
 
+#[derive(Debug)]
 pub struct App<'a> {
     pub endpoint: &'a str,
     pub scrape_interval: u64,
@@ -28,7 +31,7 @@ pub struct App<'a> {
 
 impl<'a> App<'a> {
     pub fn new(endpoint: &'a str, scrape_interval: u64, metric_scraper: MetricScraper) -> App<'a> {
-        let mut app = App {
+        App {
             endpoint,
             scrape_interval,
             metric_scraper,
@@ -38,11 +41,7 @@ impl<'a> App<'a> {
             selected_metric: None,
             selected_label: None,
             should_quit: false,
-        };
-        // initialize lists state to index 0
-        app.metric_list_state.select(Some(0));
-        app.labels_list_state.select(Some(0));
-        app
+        }
     }
 
     fn change_selected_metric(&mut self, direction: Direction) -> Result<bool, Box<dyn Error>> {
@@ -56,6 +55,7 @@ impl<'a> App<'a> {
             &mut self.metric_list_state,
             metrics_headers_len,
         );
+        log::info!("C app: {self:?}");
         let selected_index = self
             .metric_list_state
             .selected()

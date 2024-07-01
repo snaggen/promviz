@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use super::parser::extract_labels_key_and_map;
 
+#[derive(Debug)]
 pub struct MetricHistory {
     pub metrics: HashMap<String, Metric>,
 }
@@ -59,13 +60,13 @@ impl SingleScrapeMetric {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Metric {
     pub details: MetricDetails,
     pub time_series: HashMap<String, TimeSeries>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct MetricDetails {
     pub name: String,
     pub docstring: String,
@@ -88,7 +89,7 @@ impl Metric {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct TimeSeries {
     pub labels: HashMap<String, String>,
     pub samples: Vec<Sample>,

@@ -1,10 +1,9 @@
+use ratatui::layout::{Constraint, Direction, Layout, Rect};
+use ratatui::style::{Color, Modifier, Style};
+use ratatui::text::{Line, Span};
+use ratatui::widgets::{Block, BorderType, Borders, List, ListItem, ListState, Paragraph, Wrap};
+use ratatui::Frame;
 use std::error::Error;
-use tui::backend::Backend;
-use tui::layout::{Constraint, Direction, Layout, Rect};
-use tui::style::{Color, Modifier, Style};
-use tui::text::{Span, Spans};
-use tui::widgets::{Block, BorderType, Borders, List, ListItem, ListState, Paragraph, Wrap};
-use tui::Frame;
 
 use crate::interactive::app::{App, ElementInFocus};
 use crate::prom::Metric;
@@ -23,7 +22,7 @@ const fn focus_color(has_focus: bool) -> Color {
     }
 }
 
-pub fn draw<B: Backend>(f: &mut Frame<B>, app: &mut App) -> Result<(), Box<dyn Error>> {
+pub fn draw(f: &mut Frame, app: &mut App) -> Result<(), Box<dyn Error>> {
     let chunks = Layout::default()
         .constraints([Constraint::Length(2 + 3), Constraint::Min(8)].as_ref())
         .split(f.size());
@@ -32,20 +31,17 @@ pub fn draw<B: Backend>(f: &mut Frame<B>, app: &mut App) -> Result<(), Box<dyn E
     Ok(())
 }
 
-fn draw_info_header<B>(f: &mut Frame<B>, area: Rect, app: &App)
-where
-    B: Backend,
-{
+fn draw_info_header(f: &mut Frame, area: Rect, app: &App) {
     let endpoint = format!("Metrics endpoint: {}", app.endpoint);
     let scrape_interval = format!("Scraping interval: {}s", app.scrape_interval);
-    let mut text = vec![Spans::from(endpoint), Spans::from(scrape_interval)];
+    let mut text = vec![Line::from(endpoint), Line::from(scrape_interval)];
 
     let error_msg_guard = app
         .metric_scraper
         .get_error_msg_read_guard()
         .expect("to get error msg guard");
     if let Some(error_msg) = &*error_msg_guard {
-        text.push(Spans::from(Span::styled(
+        text.push(Line::from(Span::styled(
             format!("Prom-tui scraper is failing with error: {}", error_msg),
             Style::default()
                 .fg(Color::Red)
@@ -54,7 +50,7 @@ where
     }
 
     if let Some(selected_metric) = &app.selected_metric {
-        text.push(Spans::from(format!("Selected metric: {}", selected_metric)));
+        text.push(Line::from(format!("Selected metric: {}", selected_metric)));
     }
 
     let title = format!("PROM TUI {}", env!("CARGO_PKG_VERSION"));
@@ -63,11 +59,13 @@ where
     f.render_widget(paragraph, area);
 }
 
-fn draw_main<B>(f: &mut Frame<B>, area: Rect, app: &mut App) -> Result<(), Box<dyn Error>>
-where
-    B: Backend,
-{
+fn draw_main(f: &mut Frame, area: Rect, app: &mut App) -> Result<(), Box<dyn Error>> {
     let metric_headers = app.metric_scraper.get_history_lock()?.get_metrics_headers();
+    //Select first entry in list, if none is selected
+    if app.metric_list_state.selected().is_none() && !metric_headers.is_empty() {
+        app.metric_list_state.select(Some(0));
+        app.selected_metric = metric_headers.first().cloned();
+    }
 
     #[allow(clippy::option_if_let_else)]
     let metric_headers_area = if let Some(selected_metric) = &app.selected_metric {
@@ -76,6 +74,10 @@ where
             .get_history_lock()?
             .get_metric(selected_metric)
         {
+            if app.labels_list_state.selected().is_none() && !metric.time_series.is_empty() {
+                app.selected_label = metric.time_series.keys().next().cloned();
+                app.labels_list_state.select(Some(0));
+            }
             let chunks = Layout::default()
                 .constraints([Constraint::Percentage(35), Constraint::Percentage(65)].as_ref())
                 .direction(Direction::Horizontal)
@@ -116,17 +118,15 @@ where
     Ok(())
 }
 
-fn draw_list<B>(
-    f: &mut Frame<B>,
+fn draw_list(
+    f: &mut Frame,
     area: Rect,
     items: &[String],
     has_focus: bool,
     selected_label_option: &Option<String>,
     state: &mut ListState,
     title_prefix: &str,
-) where
-    B: Backend,
-{
+) {
     if let Some(selected_label) = selected_label_option {
         // if the list is updated we need to be sure that the state index is still point to the correct item
         let current_index = items
@@ -148,7 +148,7 @@ fn draw_list<B>(
     let list_item: Vec<ListItem> = items
         .iter()
         .map(|header| {
-            ListItem::new(Spans::from(vec![Span::styled(
+            ListItem::new(Line::from(vec![Span::styled(
                 header.clone(),
                 Style::default(),
             )]))
@@ -164,18 +164,16 @@ fn draw_list<B>(
     f.render_stateful_widget(list, area, state);
 }
 
-fn draw_details<B>(
-    f: &mut Frame<B>,
+fn draw_details(
+    f: &mut Frame,
     chunk_right: Rect,
     chunk_left: Rect,
     metric: &Metric,
     is_in_focus: bool,
     labels_state: &mut ListState,
     selected_label_option: &Option<String>,
-) where
-    B: Backend,
-{
-    let time_series_keys: Vec<String> = metric.time_series.iter().map(|(k, _)| k.clone()).collect();
+) {
+    let time_series_keys: Vec<String> = metric.time_series.keys().cloned().collect();
     let chunks = Layout::default()
         .constraints([Constraint::Percentage(25), Constraint::Min(16)].as_ref())
         .split(chunk_right);

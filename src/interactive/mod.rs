@@ -14,7 +14,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use tui::{backend::CrosstermBackend, Terminal};
+use ratatui::{backend::CrosstermBackend, Terminal};
 
 use crate::{interactive::app::App, prom::MetricScraper};
 mod app;
@@ -28,6 +28,7 @@ enum Event<I> {
 pub async fn show(endpoint: String, scrape_interval: u64) -> Result<(), Box<dyn Error>> {
     let metric_scraper = MetricScraper::new(endpoint.clone(), scrape_interval.clone());
     let mut app = App::new(&endpoint, scrape_interval, metric_scraper);
+    log::info!("app: {app:#?}");
     // setup terminal
     enable_raw_mode()?;
     let mut stdout = io::stdout();

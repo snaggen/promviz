@@ -8,6 +8,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::{task, time::sleep};
 
 type MetricHistoryArc = Arc<RwLock<MetricHistory>>;
+#[derive(Debug)]
 pub struct MetricScraper {
     metrics_history: MetricHistoryArc,
     error_msg: Arc<RwLock<Option<String>>>,

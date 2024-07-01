@@ -1,8 +1,5 @@
-use std::cmp::max;
-
 use log::error;
-use tui::{
-    backend::Backend,
+use ratatui::{
     layout::{Constraint, Layout, Rect},
     style::{Color, Modifier, Style},
     symbols,
@@ -16,15 +13,13 @@ use chrono::prelude::*;
 
 use super::{graph_data::GraphData, histogram_data::HistogramData};
 
-pub fn draw<B>(
-    f: &mut Frame<B>,
+pub fn draw(
+    f: &mut Frame,
     chunk_right: Rect,
     chunk_left: Rect,
     metric: &Metric,
     selected_label: &str,
-) where
-    B: Backend,
-{
+) {
     match metric.details.metric_type {
         MetricType::Histogram => {
             if let Some(histogram_data) = HistogramData::parse(metric, selected_label) {
@@ -36,16 +31,13 @@ pub fn draw<B>(
             if let Some(graph_data) = GraphData::parse(metric, selected_label) {
                 draw_graph(f, chunk_right, &graph_data);
             }
-            draw_table(f, chunk_left, metric, &selected_label);
+            draw_table(f, chunk_left, metric, selected_label);
         }
     }
 }
 
 #[allow(clippy::cast_precision_loss)]
-fn draw_table<B>(f: &mut Frame<B>, area: Rect, metric: &Metric, selected_label: &str)
-where
-    B: Backend,
-{
+fn draw_table(f: &mut Frame, area: Rect, metric: &Metric, selected_label: &str) {
     let samples = &metric
         .time_series
         .get(selected_label)
@@ -66,17 +58,17 @@ where
         Row::new(vec![time, format!("{:+.4e}", value)])
     });
 
-    let t = Table::new(rows)
-        .block(Block::default().borders(Borders::ALL).title(title))
-        .header(
-            Row::new(vec!["Time", "Value"]).style(Style::default().add_modifier(Modifier::BOLD)),
-        )
-        .highlight_style(Style::default().add_modifier(Modifier::BOLD))
-        .widths(&[
+    let t = Table::new(
+        rows,
+        &[
             Constraint::Length(50),
             Constraint::Length(15),
             Constraint::Percentage(100),
-        ]);
+        ],
+    )
+    .block(Block::default().borders(Borders::ALL).title(title))
+    .header(Row::new(vec!["Time", "Value"]).style(Style::default().add_modifier(Modifier::BOLD)))
+    .highlight_style(Style::default().add_modifier(Modifier::BOLD));
 
     let mut state = TableState::default();
     state.select(Some(samples.len() - 1));
@@ -84,17 +76,13 @@ where
     f.render_stateful_widget(t, area, &mut state);
 }
 
-fn draw_graph<B>(f: &mut Frame<B>, area: Rect, points: &GraphData)
-where
-    B: Backend,
-{
+fn draw_graph(f: &mut Frame, area: Rect, points: &GraphData) {
     let datasets = vec![Dataset::default()
         .marker(symbols::Marker::Braille)
         .style(Style::default().fg(Color::LightGreen))
         .graph_type(GraphType::Line)
         .data(&points.data)];
 
-    eprintln!("Data: {:?}", points.data);
     let mut five_percent_span = (points.y_max - points.y_min) * 0.05;
     if five_percent_span == 0.0 {
         five_percent_span = 1.0;
@@ -134,27 +122,20 @@ where
                 ])
                 .bounds([points.x_min, points.x_max]),
         )
-        .y_axis(
-            Axis::default()
-                .labels(y_labels)
-                .bounds([
-                    points.y_min - five_percent_span,
-                    points.y_max + five_percent_span,
-                ]),
-        );
+        .y_axis(Axis::default().labels(y_labels).bounds([
+            points.y_min - five_percent_span,
+            points.y_max + five_percent_span,
+        ]));
     f.render_widget(chart, area);
 }
 
-fn draw_histogram_table<B>(f: &mut Frame<B>, area: Rect, histogram_data: &HistogramData)
-where
-    B: Backend,
-{
+fn draw_histogram_table(f: &mut Frame, area: Rect, histogram_data: &HistogramData) {
     let chunks = Layout::default()
         .constraints([Constraint::Percentage(25), Constraint::Min(8)].as_ref())
         .split(area);
 
     // Draw histogram details
-    let title_details = format!("Histogram Details");
+    let title_details = "Histogram Details".to_string();
 
     let row_details = [Row::new(vec![
         histogram_data.time.to_rfc2822(),
@@ -162,23 +143,24 @@ where
         format!("{:.2}", histogram_data.sum),
     ])];
 
-    let t = Table::new(row_details)
-        .block(Block::default().borders(Borders::ALL).title(title_details))
-        .header(
-            Row::new(vec!["Time", "Count", "Sum"])
-                .style(Style::default().add_modifier(Modifier::BOLD)),
-        )
-        .highlight_style(Style::default().add_modifier(Modifier::BOLD))
-        .widths(&[
+    let t = Table::new(
+        row_details,
+        &[
             Constraint::Length(40),
             Constraint::Length(15),
             Constraint::Length(15),
             Constraint::Percentage(100),
-        ]);
+        ],
+    )
+    .block(Block::default().borders(Borders::ALL).title(title_details))
+    .header(
+        Row::new(vec!["Time", "Count", "Sum"]).style(Style::default().add_modifier(Modifier::BOLD)),
+    )
+    .highlight_style(Style::default().add_modifier(Modifier::BOLD));
     f.render_widget(t, chunks[0]);
 
     // Draw histogram buckets details
-    let title = format!("Histogram Buckets Details");
+    let title = "Histogram Buckets Details".to_string();
 
     let rows = histogram_data.data.iter().map(|entry| {
         Row::new(vec![
@@ -190,27 +172,26 @@ where
         ])
     });
 
-    let t = Table::new(rows)
-        .block(Block::default().borders(Borders::ALL).title(title))
-        .header(
-            Row::new(vec!["Bucket", "Count", "Count %", "Inc", "Inc %"])
-                .style(Style::default().add_modifier(Modifier::BOLD)),
-        )
-        .highlight_style(Style::default().add_modifier(Modifier::BOLD))
-        .widths(&[
+    let t = Table::new(
+        rows,
+        &[
             Constraint::Length(15),
             Constraint::Length(15),
             Constraint::Length(15),
             Constraint::Length(15),
             Constraint::Percentage(100),
-        ]);
+        ],
+    )
+    .block(Block::default().borders(Borders::ALL).title(title))
+    .header(
+        Row::new(vec!["Bucket", "Count", "Count %", "Inc", "Inc %"])
+            .style(Style::default().add_modifier(Modifier::BOLD)),
+    )
+    .highlight_style(Style::default().add_modifier(Modifier::BOLD));
     f.render_widget(t, chunks[1]);
 }
 
-fn draw_histogram<B>(f: &mut Frame<B>, area: Rect, histogram_data: &HistogramData)
-where
-    B: Backend,
-{
+fn draw_histogram(f: &mut Frame, area: Rect, histogram_data: &HistogramData) {
     let data: Vec<(&str, u64)> = histogram_data
         .data
         .iter()
