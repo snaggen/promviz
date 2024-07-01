@@ -83,6 +83,37 @@ pub fn decode_single_scrape_metric(lines: Vec<String>, timestamp: u64) -> Single
                 );
             }
         }
+        "summary" => {
+            let splitted_lines_for_histogram = further_split_metric_lines_for_histogram(&lines);
+            for group_lines in splitted_lines_for_histogram.iter() {
+                let mut bucket_values = Vec::new();
+                // retrieve buckets values
+                for line in group_lines.iter().take(group_lines.len() - 2) {
+                    let labels = extract_labels(&line);
+                    let (labels_map, _) = extract_labels_key_and_map(labels);
+                    let bucket_value = labels_map.get("quantile").unwrap();
+                    let value = extract_value(&line);
+                    bucket_values.push(Bucket::new(bucket_value.clone(), value as u64));
+                }
+                // retrieve sum value
+                let sum = extract_value(&group_lines[group_lines.len() - 2]);
+                // retrieve count value and labels
+                let count_line = group_lines[group_lines.len() - 1].clone();
+                let labels = extract_labels(&count_line);
+                let (_, key) = extract_labels_key_and_map(labels);
+                let count = extract_value(&count_line) as u64;
+                single_scrape_metric.metric_type = MetricType::Histogram;
+                single_scrape_metric.value_per_labels.insert(
+                    key,
+                    Sample::HistogramSample(HistogramValueSample {
+                        timestamp,
+                        bucket_values,
+                        sum,
+                        count,
+                    }),
+                );
+            }
+        }
         _ => {
             error!("invalid metric type: {}", metric_type);
         }
