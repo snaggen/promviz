@@ -55,7 +55,7 @@ fn draw_table(f: &mut Frame, area: Rect, metric: &Metric, selected_label: &str) 
             }
         };
         let time = Local.timestamp(timestamp as i64, 0).to_rfc2822();
-        Row::new(vec![time, format!("{:+.4e}", value)])
+        Row::new(vec![time, format_value(value)])
     });
 
     let t = Table::new(
@@ -89,28 +89,6 @@ fn draw_graph(f: &mut Frame, area: Rect, points: &GraphData) {
     }
     let y_min_axis = points.y_min - five_percent_span;
     let y_max_axis = points.y_max + five_percent_span;
-    let y_labels = if y_max_axis < 0.0001 && y_min_axis < 0.0001 {
-        vec![
-            Span::raw(format!("{0:.1$e}", y_min_axis, 4)),
-            Span::raw(format!("{0:.1$e}", y_max_axis, 4)),
-        ]
-    } else {
-        //Use 3 digits precision unless for close to integer values
-        let y_min_prec = if (y_min_axis - y_min_axis.floor()) < 0.0001 {
-            0
-        } else {
-            3
-        };
-        let y_max_prec = if (y_max_axis - y_max_axis.floor()) < 0.0001 {
-            0
-        } else {
-            3
-        };
-        vec![
-            Span::raw(format!("{:.1$}", y_min_axis, y_min_prec)),
-            Span::raw(format!("{:.1$}", y_max_axis, y_max_prec)),
-        ]
-    };
 
     let chart = Chart::new(datasets)
         .block(Block::default().title("Graph").borders(Borders::ALL))
@@ -122,10 +100,17 @@ fn draw_graph(f: &mut Frame, area: Rect, points: &GraphData) {
                 ])
                 .bounds([points.x_min, points.x_max]),
         )
-        .y_axis(Axis::default().labels(y_labels).bounds([
-            points.y_min - five_percent_span,
-            points.y_max + five_percent_span,
-        ]));
+        .y_axis(
+            Axis::default()
+                .labels(vec![
+                    Span::raw(format_value(y_min_axis)),
+                    Span::raw(format_value(y_max_axis)),
+                ])
+                .bounds([
+                    points.y_min - five_percent_span,
+                    points.y_max + five_percent_span,
+                ]),
+        );
     f.render_widget(chart, area);
 }
 
@@ -210,4 +195,18 @@ fn draw_histogram(f: &mut Frame, area: Rect, histogram_data: &HistogramData) {
         .bar_style(Style::default().fg(Color::LightGreen))
         .value_style(Style::default().fg(Color::Black).bg(Color::LightGreen));
     f.render_widget(t, area);
+}
+
+fn format_value(value: f64) -> String {
+    // Use e notation for really small values
+    if value < 0.0001 {
+        format!("{0:.1$e}", value, 4)
+    } else {
+        let prec = if (value - value.floor()) < 0.0001 {
+            0
+        } else {
+            3
+        };
+        format!("{:.1$}", value, prec)
+    }
 }
