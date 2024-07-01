@@ -30,6 +30,8 @@ pub fn draw(
         _ => {
             if let Some(graph_data) = GraphData::parse(metric, selected_label) {
                 draw_graph(f, chunk_right, &graph_data);
+            } else {
+                draw_empty_graph(f, chunk_right);
             }
             draw_table(f, chunk_left, metric, selected_label);
         }
@@ -111,6 +113,14 @@ fn draw_graph(f: &mut Frame, area: Rect, points: &GraphData) {
                     points.y_max + five_percent_span,
                 ]),
         );
+    f.render_widget(chart, area);
+}
+
+fn draw_empty_graph(f: &mut Frame, area: Rect) {
+    let chart = Chart::new(vec![])
+        .block(Block::default().title("Graph").borders(Borders::ALL))
+        .x_axis(Axis::default())
+        .y_axis(Axis::default());
     f.render_widget(chart, area);
 }
 
