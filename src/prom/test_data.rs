@@ -1,3 +1,4 @@
+#[allow(dead_code)]
 pub fn generate_metric_lines() -> Vec<String> {
     let mut lines = Vec::new();
     lines.push(String::from("# HELP metric_1 Description of the metric"));

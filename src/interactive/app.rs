@@ -26,6 +26,8 @@ pub struct App<'a> {
     pub labels_list_state: ListState,
     pub selected_metric: Option<String>,
     pub selected_label: Option<String>,
+    //TODO: Implement shutdown handling
+    #[allow(dead_code)]
     pub should_quit: bool,
 }
 
@@ -60,7 +62,7 @@ impl<'a> App<'a> {
             .metric_list_state
             .selected()
             .expect("a selected metric item");
-        let next_selected_metric = metrics_headers.get(selected_index).map(|o| o.clone());
+        let next_selected_metric = metrics_headers.get(selected_index).cloned();
         let different = self.selected_metric != next_selected_metric;
         self.selected_metric = next_selected_metric;
 
@@ -79,7 +81,7 @@ impl<'a> App<'a> {
                 self.selected_label = None
             }
         }
-        return Ok(different);
+        Ok(different)
     }
 
     fn change_selected_labels(&mut self, direction: Direction) -> Result<bool, Box<dyn Error>> {
@@ -89,14 +91,14 @@ impl<'a> App<'a> {
             .get_history_lock()?
             .get_metric(&selected_metric)
         {
-            let labels: Vec<String> = metric.time_series.iter().map(|(k, _)| k.clone()).collect();
+            let labels: Vec<String> = metric.time_series.keys().cloned().collect();
             let labels_len = labels.len();
             update_list_state_with_direction(direction, &mut self.labels_list_state, labels_len);
             let selected_index = self
                 .labels_list_state
                 .selected()
                 .expect("a selected labels item");
-            let next_selected_label = labels.get(selected_index).map(|o| o.clone());
+            let next_selected_label = labels.get(selected_index).cloned();
             let different = self.selected_label != next_selected_label;
             self.selected_label = next_selected_label;
             return Ok(different);

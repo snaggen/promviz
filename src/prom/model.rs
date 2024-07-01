@@ -14,6 +14,7 @@ impl MetricHistory {
         }
     }
 
+    #[allow(dead_code)]
     pub fn is_empty(&self) -> bool {
         self.metrics.len() == 0
     }
@@ -69,6 +70,7 @@ pub struct Metric {
 #[derive(Clone, Debug)]
 pub struct MetricDetails {
     pub name: String,
+    #[allow(dead_code)]
     pub docstring: String,
     pub metric_type: MetricType,
 }
@@ -91,6 +93,7 @@ impl Metric {
 
 #[derive(Clone, Debug)]
 pub struct TimeSeries {
+    #[allow(dead_code)]
     pub labels: HashMap<String, String>,
     pub samples: Vec<Sample>,
 }
