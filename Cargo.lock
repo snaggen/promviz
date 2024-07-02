@@ -907,7 +907,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "prom-tui"
+name = "promviz"
 version = "0.1.0"
 dependencies = [
  "anyhow",

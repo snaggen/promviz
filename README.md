@@ -1,6 +1,10 @@
-# prom-tui
+# promviz
 
-A simple terminal ui application to visualize Prometheus metrics.
+A Prometheus Visualizer for the terminal, written in Rust
+
+This is a fork of [prom-tui](https://github.com/pastrami-turtles/prom-tui),
+mostly to scratch my own itch. So, feature requests without a PR is very
+unlikely to happen.
 
 ## Usage
 
@@ -18,16 +22,8 @@ cargo run -- --endpoint "http://localhost:8081/metrics"
 
 with the env variable
 ```bash
-PROMTUI_ENDPOINT=http://localhost:8081/metrics cargo run
+PROM_ENDPOINT=http://localhost:8081/metrics cargo run
 ```
 
 If no endpoint is provided the default value is http://localhost:8080/metrics
 
-## Local development
-
-Prereqs:
-* VS Code (incl. extentions)
-  * ms-vscode-remote.remote-containers
-* Docker
-
-Using the 'Remote - Containers' extension, the command 'Reopen in Container' will open the project within the configured container environment. This also starts a second container which exposes Prometheus metrics on http://localhost:8080/metrics.
