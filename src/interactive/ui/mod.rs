@@ -75,7 +75,8 @@ fn draw_main(f: &mut Frame, area: Rect, app: &mut App) -> Result<(), Box<dyn Err
             .get_metric(selected_metric)
         {
             if app.labels_list_state.selected().is_none() && !metric.time_series.is_empty() {
-                app.selected_label = metric.time_series.keys().next().cloned();
+                let labels : Vec<&String> = metric.get_labels();
+                app.selected_label = labels.first().map(|&s| s.clone()); 
                 app.labels_list_state.select(Some(0));
             }
             let chunks = Layout::default()
@@ -173,14 +174,14 @@ fn draw_details(
     labels_state: &mut ListState,
     selected_label_option: &Option<String>,
 ) {
-    let time_series_keys: Vec<String> = metric.time_series.keys().cloned().collect();
+    let labels: Vec<String> = metric.get_labels().iter().map(|&s| s.clone()).collect();
     let chunks = Layout::default()
         .constraints([Constraint::Percentage(25), Constraint::Min(16)].as_ref())
         .split(chunk_right);
     draw_list(
         f,
         chunks[0],
-        &time_series_keys,
+        &labels,
         is_in_focus,
         selected_label_option,
         labels_state,

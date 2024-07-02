@@ -74,7 +74,8 @@ impl<'a> App<'a> {
                 .get_history_lock()?
                 .get_metric(&selected_metric)
             {
-                self.selected_label = metric.time_series.keys().next().cloned();
+                let labels : Vec<&String> = metric.get_labels();
+                self.selected_label = labels.first().map(|&s| s.clone());
                 self.labels_list_state.select(Some(0));
             } else {
                 self.labels_list_state.select(Some(0));
@@ -91,14 +92,14 @@ impl<'a> App<'a> {
             .get_history_lock()?
             .get_metric(&selected_metric)
         {
-            let labels: Vec<String> = metric.time_series.keys().cloned().collect();
+            let labels: Vec<&String> = metric.get_labels();
             let labels_len = labels.len();
             update_list_state_with_direction(direction, &mut self.labels_list_state, labels_len);
             let selected_index = self
                 .labels_list_state
                 .selected()
                 .expect("a selected labels item");
-            let next_selected_label = labels.get(selected_index).cloned();
+            let next_selected_label = labels.get(selected_index).map(|&s| s.clone());
             let different = self.selected_label != next_selected_label;
             self.selected_label = next_selected_label;
             return Ok(different);

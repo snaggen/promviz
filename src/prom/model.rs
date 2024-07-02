@@ -25,7 +25,9 @@ impl MetricHistory {
     }
 
     pub fn get_metrics_headers(&self) -> Vec<String> {
-        self.metrics.keys().cloned().collect()
+        let mut headers: Vec<String> = self.metrics.keys().cloned().collect();
+        headers.sort();
+        headers
     }
 
     pub fn get_metric(&self, metric_name: &str) -> Option<&Metric> {
@@ -94,6 +96,12 @@ impl Metric {
                 add_time_series_into_metric(key, &mut self.time_series, value);
             }
         })
+    }
+
+    pub fn get_labels(&self) -> Vec<&String> {
+        let mut labels: Vec<&String> = self.time_series.keys().collect();
+        labels.sort();
+        labels
     }
 }
 
