@@ -8,10 +8,10 @@ use ratatui::{
     Frame,
 };
 
-use crate::prom::{Metric, MetricType, Sample};
+use crate::prom::{Metric, MetricType, Sample, SummaryValueSample};
 use chrono::prelude::*;
 
-use super::{graph_data::GraphData, histogram_data::HistogramData};
+use super::{format_value, graph_data::GraphData, histogram_data::HistogramData};
 
 pub fn draw(
     f: &mut Frame,
@@ -25,6 +25,18 @@ pub fn draw(
             if let Some(histogram_data) = HistogramData::parse(metric, selected_label) {
                 draw_histogram_table(f, chunk_left, &histogram_data);
                 draw_histogram(f, chunk_right, &histogram_data);
+            }
+        }
+        MetricType::Summary => {
+            if let Some(Sample::SummarySample(summary_sample)) = &metric
+                .time_series
+                .get(selected_label)
+                .expect("values for selected label")
+                .samples
+                .last()
+            {
+                draw_summary_table(f, chunk_left, summary_sample);
+                draw_summary(f, chunk_right, summary_sample);
             }
         }
         _ => {
@@ -207,16 +219,60 @@ fn draw_histogram(f: &mut Frame, area: Rect, histogram_data: &HistogramData) {
     f.render_widget(t, area);
 }
 
-fn format_value(value: f64) -> String {
-    // Use e notation for really small values
-    if value != 0.0 && value < 0.0001 {
-        format!("{0:.1$e}", value, 4)
-    } else {
-        let prec = if (value - value.floor()) < 0.0001 {
-            0
-        } else {
-            3
-        };
-        format!("{:.1$}", value, prec)
-    }
+fn draw_summary_table(f: &mut Frame, area: Rect, summary_data: &SummaryValueSample) {
+    let chunks = Layout::default()
+        .constraints([Constraint::Percentage(25), Constraint::Min(8)].as_ref())
+        .split(area);
+
+    // Draw histogram details
+    let title_details = "Summary Details".to_string();
+
+    let row_details = [Row::new(vec![
+        summary_data.time.to_rfc2822(),
+        summary_data.count.to_string(),
+        format!("{:.2}", summary_data.sum),
+    ])];
+
+    let t = Table::new(
+        row_details,
+        &[
+            Constraint::Length(40),
+            Constraint::Length(15),
+            Constraint::Length(15),
+            Constraint::Percentage(100),
+        ],
+    )
+    .block(Block::default().borders(Borders::ALL).title(title_details))
+    .header(
+        Row::new(vec!["Time", "Count", "Sum"]).style(Style::default().add_modifier(Modifier::BOLD)),
+    )
+    .highlight_style(Style::default().add_modifier(Modifier::BOLD));
+    f.render_widget(t, chunks[0]);
+
+    // Draw histogram buckets details
+    let title = "Summary Data Details".to_string();
+
+    let rows = summary_data
+        .quantiles
+        .iter()
+        .map(|entry| Row::new(vec![entry.name.clone(), entry.value.to_string()]));
+
+    let t = Table::new(rows, &[Constraint::Length(15), Constraint::Percentage(100)])
+        .block(Block::default().borders(Borders::ALL).title(title))
+        .header(
+            Row::new(vec!["Quantil", "Value"]).style(Style::default().add_modifier(Modifier::BOLD)),
+        )
+        .highlight_style(Style::default().add_modifier(Modifier::BOLD));
+    f.render_widget(t, chunks[1]);
+}
+
+fn draw_summary(f: &mut Frame, area: Rect, summary_data: &SummaryValueSample) {
+    let bar_width = area.width / (summary_data.quantiles.len() + 1) as u16;
+    let t = BarChart::default()
+        .block(Block::default().title("Summary").borders(Borders::ALL))
+        .data(summary_data)
+        .bar_width(bar_width)
+        .bar_style(Style::default().fg(Color::LightGreen))
+        .value_style(Style::default().fg(Color::Black).bg(Color::LightGreen));
+    f.render_widget(t, area);
 }

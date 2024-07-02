@@ -19,6 +19,7 @@ use ratatui::{backend::CrosstermBackend, Terminal};
 use crate::{interactive::app::App, prom::MetricScraper};
 mod app;
 mod ui;
+pub use ui::format_value;
 
 enum Event<I> {
     Input(I),

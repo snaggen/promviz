@@ -190,3 +190,13 @@ fn draw_details(
         history::draw(f, chunks[1], chunk_left, metric, selected_label);
     }
 }
+
+pub fn format_value(value: f64) -> String {
+    // Use e notation for really small values
+    if value != 0.0 && value < 0.001 {
+        format!("{0:.1$e}", value, 3)
+    } else {
+        let prec = if (value - value.floor()) == 0.0 { 0 } else { 3 };
+        format!("{:.1$}", value, prec)
+    }
+}

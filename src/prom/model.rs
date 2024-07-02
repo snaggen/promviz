@@ -1,5 +1,10 @@
 use std::collections::HashMap;
 
+use chrono::{DateTime, Local};
+use ratatui::widgets::{Bar, BarGroup};
+
+use crate::interactive::format_value;
+
 use super::parser::extract_labels_key_and_map;
 
 #[derive(Debug)]
@@ -33,6 +38,7 @@ pub enum MetricType {
     Gauge,
     Counter,
     Histogram,
+    Summary,
 }
 
 pub struct SingleScrapeMetric {
@@ -103,6 +109,7 @@ pub enum Sample {
     GaugeSample(SingleValueSample),
     CounterSample(SingleValueSample),
     HistogramSample(HistogramValueSample),
+    SummarySample(SummaryValueSample),
 }
 
 #[derive(Clone, Debug)]
@@ -117,6 +124,12 @@ pub struct Bucket {
     pub value: u64,
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub struct Quantil {
+    pub name: String,
+    pub value: f64,
+}
+
 impl Bucket {
     pub fn new(name: String, value: u64) -> Self {
         Self { name, value }
@@ -129,6 +142,51 @@ pub struct HistogramValueSample {
     pub bucket_values: Vec<Bucket>,
     pub sum: f64,
     pub count: u64,
+}
+
+#[derive(Clone, Debug)]
+pub struct SummaryValueSample {
+    pub time: DateTime<Local>,
+    pub quantiles: Vec<Quantil>,
+    pub sum: f64,
+    pub count: u64,
+}
+
+impl<'a> From<&SummaryValueSample> for BarGroup<'a> {
+    fn from(val: &SummaryValueSample) -> Self {
+        let mut min = f64::MAX;
+        let mut max = f64::MIN;
+        val.quantiles.iter().for_each(|data_point| {
+            if data_point.value > max {
+                max = data_point.value;
+            }
+            if data_point.value < min {
+                min = data_point.value;
+            }
+        });
+        //Low level is the bar height for the min
+        //value. For non-zero values we want a
+        //small bar to be displayed.
+        let low_level = if min != 0.0 { 5.0 } else { 0.0 };
+
+        //Scale so we have at least 100 steps
+        let scale_span = 100.0 - low_level;
+
+        //3.25, 2.25
+        let bars: Vec<Bar> = val
+            .quantiles
+            .iter()
+            .map(|m| {
+                let percent = (m.value - min) / (max - min);
+                let new_val = (percent * scale_span) + low_level;
+                Bar::default()
+                    .value(new_val.round() as u64)
+                    .text_value(format_value(m.value))
+                    .label(m.name.clone().into())
+            })
+            .collect();
+        BarGroup::default().bars(&bars)
+    }
 }
 
 fn add_time_series_into_metric(
