@@ -101,7 +101,7 @@ pub fn decode_single_scrape_metric(lines: Vec<String>, timestamp: u64) -> Single
                 let (_, key) = extract_labels_key_and_map(labels);
                 let count = extract_value(&count_line) as u64;
                 single_scrape_metric.metric_type = MetricType::Summary;
-                let time = Local.timestamp(timestamp as i64, 0);
+                let time = Local.timestamp_opt(timestamp as i64, 0).unwrap();
                 single_scrape_metric.value_per_labels.insert(
                     key,
                     Sample::SummarySample(SummaryValueSample {

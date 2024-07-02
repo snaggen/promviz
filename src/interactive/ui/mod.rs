@@ -53,7 +53,7 @@ fn draw_info_header(f: &mut Frame, area: Rect, app: &App) {
         text.push(Line::from(format!("Selected metric: {}", selected_metric)));
     }
 
-    let title = format!("PROM TUI {}", env!("CARGO_PKG_VERSION"));
+    let title = format!("PROMVIZ {}", env!("CARGO_PKG_VERSION"));
     let block = Block::default().borders(Borders::ALL).title(title);
     let paragraph = Paragraph::new(text).block(block).wrap(Wrap { trim: true });
     f.render_widget(paragraph, area);

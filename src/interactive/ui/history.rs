@@ -68,7 +68,7 @@ fn draw_table(f: &mut Frame, area: Rect, metric: &Metric, selected_label: &str) 
                 unimplemented!();
             }
         };
-        let time = Local.timestamp(timestamp as i64, 0).to_rfc2822();
+        let time = Local.timestamp_opt(timestamp as i64, 0).unwrap().to_rfc2822();
         Row::new(vec![time, format_value(value)])
     });
 

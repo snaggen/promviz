@@ -102,7 +102,7 @@ impl HistogramData {
             return None;
         }
 
-        let time = Local.timestamp(timestamp as i64, 0);
+        let time = Local.timestamp_opt(timestamp as i64, 0).unwrap();
 
         Some(Self {
             data,

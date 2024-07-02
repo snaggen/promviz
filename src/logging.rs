@@ -3,7 +3,7 @@ use log4rs::append::file::FileAppender;
 use log4rs::config::{Appender, Config, Root};
 use log4rs::encode::pattern::PatternEncoder;
 
-pub fn app_config(file_name: &str, level: Option<&str>) -> Config {
+pub fn app_config(file_name: &str, level: Option<&String>) -> Config {
     let level = match level {
         Some(l) => convert_to_level(l),
         None => Ok(LevelFilter::Info),
