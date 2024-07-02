@@ -6,6 +6,8 @@ This is a fork of [prom-tui](https://github.com/pastrami-turtles/prom-tui),
 mostly to scratch my own itch. So, feature requests without a PR is very
 unlikely to happen.
 
+ ![Promviz showing the main window with a summary graph](/assets/demo.png)
+
 ## Usage
 
 Start with 'cargo run' and quit by pressing 'q'.
