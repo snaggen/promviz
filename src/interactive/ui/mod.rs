@@ -75,8 +75,8 @@ fn draw_main(f: &mut Frame, area: Rect, app: &mut App) -> Result<(), Box<dyn Err
             .get_metric(selected_metric)
         {
             if app.labels_list_state.selected().is_none() && !metric.time_series.is_empty() {
-                let labels : Vec<&String> = metric.get_labels();
-                app.selected_label = labels.first().map(|&s| s.clone()); 
+                let labels: Vec<&String> = metric.get_labels();
+                app.selected_label = labels.first().map(|&s| s.clone());
                 app.labels_list_state.select(Some(0));
             }
             let chunks = Layout::default()

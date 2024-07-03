@@ -38,8 +38,12 @@ impl GraphData {
             return None;
         }
 
-        let first_time = Local.timestamp_opt(data.first().unwrap().0 as i64, 0).unwrap();
-        let last_time = Local.timestamp_opt(data.last().unwrap().0 as i64, 0).unwrap();
+        let first_time = Local
+            .timestamp_opt(data.first().unwrap().0 as i64, 0)
+            .unwrap();
+        let last_time = Local
+            .timestamp_opt(data.last().unwrap().0 as i64, 0)
+            .unwrap();
         let x_min = data.first().unwrap().0;
         let x_max = data.last().unwrap().0;
 

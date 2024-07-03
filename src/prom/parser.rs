@@ -184,7 +184,7 @@ fn extract_type(line: &str) -> Option<String> {
     metric_type
 }
 
-pub fn extract_labels(line: &String) -> Option<String> {
+pub fn extract_labels(line: &str) -> Option<String> {
     match line.find('{') {
         Some(firs_index) => match line.find('}') {
             Some(second_index) => {
@@ -245,7 +245,7 @@ pub fn decode_labels_with_rgx(labels_to_split: &str) -> HashMap<String, String> 
     labels
 }
 
-fn extract_value(line: &String) -> f64 {
+fn extract_value(line: &str) -> f64 {
     line.split_whitespace()
         .last()
         .unwrap()

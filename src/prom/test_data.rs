@@ -1,107 +1,51 @@
 #[allow(dead_code)]
 pub fn generate_metric_lines() -> Vec<String> {
-    let mut lines = Vec::new();
-    lines.push(String::from("# HELP metric_1 Description of the metric"));
-    lines.push(String::from("# TYPE metric_1 gauge"));
-    lines.push(String::from("metric_1{shard=\"0\"} 10.0"));
-    lines.push(String::from("# HELP metric_2 Description"));
-    lines.push(String::from("# TYPE metric_2 counter"));
-    lines.push(String::from("metric_2{shard=\"0\",label1=\"test1\"} 5"));
-    lines.push(String::from("# HELP incoming_requests Incoming Requests"));
-    lines.push(String::from("# TYPE incoming_requests counter"));
-    lines.push(String::from("incoming_requests 10"));
-    lines.push(String::from("# HELP connected_clients Connected Clients"));
-    lines.push(String::from("# TYPE connected_clients gauge"));
-    lines.push(String::from("connected_clients 3"));
-    lines.push(String::from("# HELP response_time Response Times"));
-    lines.push(String::from("# TYPE response_time histogram"));
-    lines.push(String::from(
-        "response_time_bucket{env=\"production\",le=\"0.005\"} 3",
-    ));
-    lines.push(String::from(
-        "response_time_bucket{env=\"production\",le=\"0.01\"} 4",
-    ));
-    lines.push(String::from(
-        "response_time_bucket{env=\"production\",le=\"0.025\"} 13",
-    ));
-    lines.push(String::from(
-        "response_time_bucket{env=\"production\",le=\"0.05\"} 25",
-    ));
-    lines.push(String::from(
-        "response_time_bucket{env=\"production\",le=\"0.1\"} 57",
-    ));
-    lines.push(String::from(
-        "response_time_bucket{env=\"production\",le=\"0.25\"} 148",
-    ));
-    lines.push(String::from(
-        "response_time_bucket{env=\"production\",le=\"0.5\"} 319",
-    ));
-    lines.push(String::from(
-        "response_time_bucket{env=\"production\",le=\"+Inf\"} 6563",
-    ));
-    lines.push(String::from(
-        "response_time_sum{env=\"production\"} 32899.06535799631",
-    ));
-    lines.push(String::from("response_time_count{env=\"production\"} 6563"));
-    lines.push(String::from(
-        "response_time_bucket{env=\"testing\",le=\"0.005\"} 4",
-    ));
-    lines.push(String::from(
-        "response_time_bucket{env=\"testing\",le=\"0.01\"} 4",
-    ));
-    lines.push(String::from(
-        "response_time_bucket{env=\"testing\",le=\"0.025\"} 13",
-    ));
-    lines.push(String::from(
-        "response_time_bucket{env=\"testing\",le=\"0.05\"} 31",
-    ));
-    lines.push(String::from(
-        "response_time_bucket{env=\"testing\",le=\"0.1\"} 56",
-    ));
-    lines.push(String::from(
-        "response_time_bucket{env=\"testing\",le=\"0.25\"} 168",
-    ));
-    lines.push(String::from(
-        "response_time_bucket{env=\"testing\",le=\"0.5\"} 338",
-    ));
-    lines.push(String::from(
-        "response_time_bucket{env=\"testing\",le=\"+Inf\"} 6451",
-    ));
-    lines.push(String::from(
-        "response_time_sum{env=\"testing\"} 32157.055112958977",
-    ));
-    lines.push(String::from("response_time_count{env=\"testing\"} 6451"));
-    lines.push(String::from(
-        "# HELP response_time_no_labels Response Times",
-    ));
-    lines.push(String::from("# TYPE response_time_no_labels  histogram"));
-    lines.push(String::from(
-        "response_time_no_labels_bucket{le=\"0.005\"} 3",
-    ));
-    lines.push(String::from(
-        "response_time_no_labels_bucket{le=\"0.01\"} 4",
-    ));
-    lines.push(String::from(
-        "response_time_no_labels_bucket{le=\"0.025\"} 13",
-    ));
-    lines.push(String::from(
-        "response_time_no_labels_bucket{le=\"0.05\"} 25",
-    ));
-    lines.push(String::from(
-        "response_time_no_labels_bucket{le=\"0.1\"} 57",
-    ));
-    lines.push(String::from(
-        "response_time_no_labels_bucket{le=\"0.25\"} 148",
-    ));
-    lines.push(String::from(
-        "response_time_no_labels_bucket{le=\"0.5\"} 319",
-    ));
-    lines.push(String::from(
-        "response_time_no_labels_bucket{le=\"+Inf\"} 6563",
-    ));
-    lines.push(String::from(
-        "response_time_no_labels_sum 32899.06535799631",
-    ));
-    lines.push(String::from("response_time_count 6451"));
-    lines
+    vec![
+        "# HELP metric_1 Description of the metric".to_string(),
+        "# TYPE metric_1 gauge".to_string(),
+        "metric_1{shard=\"0\"} 10.0".to_string(),
+        "# HELP metric_2 Description".to_string(),
+        "# TYPE metric_2 counter".to_string(),
+        "metric_2{shard=\"0\",label1=\"test1\"} 5".to_string(),
+        "# HELP incoming_requests Incoming Requests".to_string(),
+        "# TYPE incoming_requests counter".to_string(),
+        "incoming_requests 10".to_string(),
+        "# HELP connected_clients Connected Clients".to_string(),
+        "# TYPE connected_clients gauge".to_string(),
+        "connected_clients 3".to_string(),
+        "# HELP response_time Response Times".to_string(),
+        "# TYPE response_time histogram".to_string(),
+        "response_time_bucket{env=\"production\",le=\"0.005\"} 3".to_string(),
+        "response_time_bucket{env=\"production\",le=\"0.01\"} 4".to_string(),
+        "response_time_bucket{env=\"production\",le=\"0.025\"} 13".to_string(),
+        "response_time_bucket{env=\"production\",le=\"0.05\"} 25".to_string(),
+        "response_time_bucket{env=\"production\",le=\"0.1\"} 57".to_string(),
+        "response_time_bucket{env=\"production\",le=\"0.25\"} 148".to_string(),
+        "response_time_bucket{env=\"production\",le=\"0.5\"} 319".to_string(),
+        "response_time_bucket{env=\"production\",le=\"+Inf\"} 6563".to_string(),
+        "response_time_sum{env=\"production\"} 32899.06535799631".to_string(),
+        "response_time_count{env=\"production\"} 6563".to_string(),
+        "response_time_bucket{env=\"testing\",le=\"0.005\"} 4".to_string(),
+        "response_time_bucket{env=\"testing\",le=\"0.01\"} 4".to_string(),
+        "response_time_bucket{env=\"testing\",le=\"0.025\"} 13".to_string(),
+        "response_time_bucket{env=\"testing\",le=\"0.05\"} 31".to_string(),
+        "response_time_bucket{env=\"testing\",le=\"0.1\"} 56".to_string(),
+        "response_time_bucket{env=\"testing\",le=\"0.25\"} 168".to_string(),
+        "response_time_bucket{env=\"testing\",le=\"0.5\"} 338".to_string(),
+        "response_time_bucket{env=\"testing\",le=\"+Inf\"} 6451".to_string(),
+        "response_time_sum{env=\"testing\"} 32157.055112958977".to_string(),
+        "response_time_count{env=\"testing\"} 6451".to_string(),
+        "# HELP response_time_no_labels Response Times".to_string(),
+        "# TYPE response_time_no_labels  histogram".to_string(),
+        "response_time_no_labels_bucket{le=\"0.005\"} 3".to_string(),
+        "response_time_no_labels_bucket{le=\"0.01\"} 4".to_string(),
+        "response_time_no_labels_bucket{le=\"0.025\"} 13".to_string(),
+        "response_time_no_labels_bucket{le=\"0.05\"} 25".to_string(),
+        "response_time_no_labels_bucket{le=\"0.1\"} 57".to_string(),
+        "response_time_no_labels_bucket{le=\"0.25\"} 148".to_string(),
+        "response_time_no_labels_bucket{le=\"0.5\"} 319".to_string(),
+        "response_time_no_labels_bucket{le=\"+Inf\"} 6563".to_string(),
+        "response_time_no_labels_sum 32899.06535799631".to_string(),
+        "response_time_count 6451".to_string(),
+    ]
 }

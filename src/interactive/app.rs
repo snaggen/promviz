@@ -74,7 +74,7 @@ impl<'a> App<'a> {
                 .get_history_lock()?
                 .get_metric(&selected_metric)
             {
-                let labels : Vec<&String> = metric.get_labels();
+                let labels: Vec<&String> = metric.get_labels();
                 self.selected_label = labels.first().map(|&s| s.clone());
                 self.labels_list_state.select(Some(0));
             } else {

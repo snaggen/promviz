@@ -113,6 +113,7 @@ pub struct TimeSeries {
 }
 
 #[derive(Clone, Debug)]
+#[allow(clippy::enum_variant_names)]
 pub enum Sample {
     GaugeSample(SingleValueSample),
     CounterSample(SingleValueSample),

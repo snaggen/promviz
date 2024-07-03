@@ -69,29 +69,26 @@ impl HistogramData {
         let mut count = 0;
         let mut sum = 0.0;
 
-        if let Some(sample) = *last_sample {
-            if let Sample::HistogramSample(histogram) = sample {
-                timestamp = histogram.timestamp;
-                count = histogram.count;
-                sum = histogram.sum;
-                for (index, bucket) in histogram.bucket_values.iter().enumerate() {
-                    let inc_per_bucket;
-                    if index == 0 {
-                        inc_per_bucket = bucket.value;
-                    } else {
-                        inc_per_bucket = bucket.value - histogram.bucket_values[index - 1].value;
-                    }
-                    let percentage = (bucket.value as f64 / histogram.count as f64) * 100.0;
-                    let inc_per_bucket_percentage =
-                        (inc_per_bucket as f64) / (histogram.count as f64) * 100.0;
-                    data.push(BucketData::new(
-                        bucket.name.clone(),
-                        bucket.value,
-                        percentage,
-                        inc_per_bucket,
-                        inc_per_bucket_percentage,
-                    ))
-                }
+        if let Some(Sample::HistogramSample(histogram)) = *last_sample {
+            timestamp = histogram.timestamp;
+            count = histogram.count;
+            sum = histogram.sum;
+            for (index, bucket) in histogram.bucket_values.iter().enumerate() {
+                let inc_per_bucket = if index == 0 {
+                    bucket.value
+                } else {
+                    bucket.value - histogram.bucket_values[index - 1].value
+                };
+                let percentage = (bucket.value as f64 / histogram.count as f64) * 100.0;
+                let inc_per_bucket_percentage =
+                    (inc_per_bucket as f64) / (histogram.count as f64) * 100.0;
+                data.push(BucketData::new(
+                    bucket.name.clone(),
+                    bucket.value,
+                    percentage,
+                    inc_per_bucket,
+                    inc_per_bucket_percentage,
+                ))
             }
         }
         if data.len() < 2 {
