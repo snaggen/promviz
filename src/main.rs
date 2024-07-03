@@ -1,4 +1,6 @@
 use crate::logging::app_config;
+use clap::Parser;
+use cli::Cli;
 use regex::Regex;
 
 mod cli;
@@ -8,31 +10,24 @@ mod prom;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // read cli arguments
-    let matches = cli::build().get_matches();
+    let cli = Cli::parse();
 
     // initialize the logger
-    log4rs::init_config(app_config("log.out", matches.get_one::<String>("Logging"))).unwrap();
+    log4rs::init_config(app_config("log.out", cli.loglevel)).unwrap();
     log::info!("Starting the application!");
 
     let regex = Regex::new(":(\\d{2,5})/").unwrap();
-    let port_option = matches.get_one::<String>("Port");
-    let endpoint_option = matches.get_one::<String>("Endpoint");
-    let endpoint = match port_option {
-        Some(port) => endpoint_option
-            .map(|e| regex.replace(e, format!(":{port}/", port = port)))
-            .unwrap()
+    let endpoint = match cli.port {
+        Some(port) => regex
+            .replace(&cli.endpoint, format!(":{port}/", port = port))
             .to_string(),
-        None => endpoint_option.unwrap().to_string(),
+        None => cli.endpoint,
     };
-    let scrape_interval: &u16 = matches
-        .get_one::<u16>("Scrape-Interval")
-        .expect("scrape interval value to be available");
     log::info!("Reading metrics from endpoint: {}", endpoint);
-    log::info!("Scraping interval is: {}s", scrape_interval);
+    log::info!("Scraping interval is: {}s", cli.scrape_interval);
 
     // start dashboard
     log::info!("Showing the dashboard");
-    interactive::show(endpoint.clone(), (*scrape_interval).into()).await?;
+    interactive::show(endpoint.clone(), cli.scrape_interval as u64).await?;
     Ok(())
 }
